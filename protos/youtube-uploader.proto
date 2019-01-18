@@ -1,0 +1,45 @@
+syntax = "proto3";
+
+option java_multiple_files = true;
+option java_package = "org.erpya.grpc";
+option java_outer_classname = "YoutubeUploader";
+option objc_class_prefix = "HLW";
+
+package uploader;
+
+// The greeting service definition.
+service YouTubeFileUploader {
+  //  Sends a greeting
+  rpc requestUpload (UploadFileData) returns (UploadReply) {}
+  //  Get List
+  rpc requestFileList (ClientRequest) returns (FileList) {}
+}
+
+//  Client request
+message ClientRequest {
+  string clientname = 1;
+  string filename = 2;
+}
+
+// The request message containing the user's name.
+message UploadFileData {
+  string filename = 1;
+  string basename = 2;
+  string lastmod = 3;
+  string size = 4;
+  string type = 5;
+  string mime = 6;
+  string title = 7;
+  string description = 8;
+  string keywords = 9;
+}
+
+// The response message containing the greetings
+message UploadReply {
+  string message = 1;
+}
+
+//  List of data
+message FileList {
+  repeated UploadFileData fileList = 1;
+}
