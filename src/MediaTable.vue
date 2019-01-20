@@ -1,69 +1,85 @@
 <template>
-  <el-table
-    :data="tableData.filter(data => !search || data.filename.toLowerCase().includes(search.toLowerCase()))"
-    style="width: 100%">
-    <el-table-column
-      label="Title"
-      prop="title">
-    </el-table-column>
-    <el-table-column
-      label="Keywords"
-      prop="keywords">
-    </el-table-column>
-    <el-table-column
-      label="File Name"
-      prop="basename">
-    </el-table-column>
-    <el-table-column
-      label="Updated"
-      prop="lastmod">
-    </el-table-column>
-    <el-table-column
-      label="Size"
-      prop="size">
-    </el-table-column>
-    <el-table-column
-      align="right">
-      <template slot="header" slot-scope="scope">
-        <el-input
-          v-model="search"
-          size="mini"
-          placeholder="Type to search"/>
-      </template>
-      <template slot-scope="scope">
-        <el-button
-          size="mini"
-          type="info"
-          plain
-          @click="loadList(scope.row.filename, true)">Parent</el-button>
-        <el-button
-          size="mini"
-          type="primary"
-          plain
-          v-show="scope.row.type == 'directory'"
-          @click="loadList(scope.row.filename)">Open</el-button>
+  <div>
+    <el-table
+      :data="tableData.filter(data => !search || data.filename.toLowerCase().includes(search.toLowerCase()))"
+      style="width: 100%">
+      <el-table-column
+        label="Title"
+        prop="title">
+      </el-table-column>
+      <el-table-column
+        label="Keywords"
+        prop="keywords">
+      </el-table-column>
+      <el-table-column
+        label="File Name"
+        prop="basename">
+      </el-table-column>
+      <el-table-column
+        label="Updated"
+        prop="lastmod">
+      </el-table-column>
+      <el-table-column
+        label="Size"
+        prop="size">
+      </el-table-column>
+      <el-table-column
+        align="right">
+        <template slot="header" slot-scope="scope">
+          <el-input
+            v-model="search"
+            size="mini"
+            placeholder="Type to search"/>
+        </template>
+        <template slot-scope="scope">
           <el-button
             size="mini"
-            type="success"
+            type="info"
             plain
-            v-show="scope.row.type != 'directory'"
-            @click="handlePublish(scope.$index, scope.row)">Publish</el-button>
-      </template>
-    </el-table-column>
-  </el-table>
+            @click="loadList(scope.row.filename, true)">Parent</el-button>
+          <el-button
+            size="mini"
+            type="primary"
+            plain
+            v-show="scope.row.type == 'directory'"
+            @click="loadList(scope.row.filename)">Open</el-button>
+            <el-button
+              size="mini"
+              type="success"
+              plain
+              v-show="scope.row.type != 'directory'"
+              @click="showPublishDialog(scope.$index)">Publish</el-button>
+        </template>
+      </el-table-column>
+    </el-table>
+    <el-dialog title="Publish Video"
+      :visible.sync="dialogFormVisible">
+      <media-attributes
+        :indexValue="currentIndex"
+        :filenameValue="tableData[currentIndex].filename"
+        :titleValue="tableData[currentIndex].title"
+        :descriptionValue="tableData[currentIndex].description"
+        :keywordsValue="tableData[currentIndex].keywords">
+      </media-attributes>
+    </el-dialog>
+  </div>
 </template>
 
 <script>
+  import { eventBus } from './main.js'
+  import MediaAttributes from "./MediaAttributes.vue";
   var GRPC_HOST = 'http://0.0.0.0:8989';
   export default {
     props: ['tableData'],
+    components: {
+      MediaAttributes
+    },
     data() {
       return {
-        search: ''
+        search: '',
+        currentIndex: 0,
+        dialogFormVisible: false
       }
-    },
-    created: function() {
-      this.loadList();
     },
     methods: {
       handlePublish(index, row) {
@@ -120,8 +136,7 @@
       },
       setRowValues(receiveList) {
         this.clearArray();
-        var i = 0;
-        for(i = 0; i < receiveList.getFilelistList().length; i++) {
+        for(var i = 0; i < receiveList.getFilelistList().length; i++) {
           if(this.isValidFile(receiveList.getFilelistList()[i].getFilename())
             || receiveList.getFilelistList()[i].getType() == 'directory') {
             this.tableData.push({
@@ -148,7 +163,27 @@
       },
       clearArray() {
         this.tableData.splice(0, this.tableData.length);
+      },
+      showPublishDialog(index) {
+        console.log("Index: " + index);
+        this.currentIndex = index;
+        this.dialogFormVisible = true;
       }
     },
+    created() {
+      this.loadList();
+      eventBus.$on('media-to-publish', (mediaAttribute)=> {
+        console.log(mediaAttribute);
+        this.dialogFormVisible = false;
+        this.tableData[mediaAttribute.index].title = mediaAttribute.title;
+        this.tableData[mediaAttribute.index].description = mediaAttribute.description;
+        this.tableData[mediaAttribute.index].keywords = mediaAttribute.keywords;
+        this.handlePublish(mediaAttribute.index, this.tableData[mediaAttribute.index]);
+      });
+      eventBus.$on('media-to-cancel', ()=> {
+        console.log("cancel");
+        this.dialogFormVisible = false;
+      });
+    }
   }
 </script>

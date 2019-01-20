@@ -24,9 +24,7 @@ export default {
         title: '',
         description: '',
         keywords: ''
-      }],
-      search: '',
-      msg: 'Welcome to Your Vue.js App'
+      }]
     }
   }
 }
