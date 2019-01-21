@@ -41,13 +41,13 @@
             size="mini"
             type="primary"
             plain
-            v-show="scope.row.type == 'directory'"
+            v-show="scope.row.type == 'directory' && scope.row.type != '--'"
             @click="loadList(scope.row.filename)">Open</el-button>
             <el-button
               size="mini"
               type="success"
               plain
-              v-show="scope.row.type != 'directory'"
+              v-show="scope.row.type != 'directory' && scope.row.type != '--'"
               @click="showPublishDialog(scope.$index)">Publish</el-button>
         </template>
       </el-table-column>
@@ -100,12 +100,18 @@
         fileData.setDescription(row.description);
         fileData.setKeywords(row.keywords);
         //
+        this.infoMessage("Uploading File: " + fileData.getBasename());
         var callList = requestService.requestUpload(fileData)
           .then(res => {
-          console.log('Request response = ', res);
+          console.log('Request response = ', res.getMessage());
+          if(res.getMessage()) {
+            this.errorMessage(res.getMessage());
+          } else {
+            this.sucessMessage();
+          }
           //
         })
-        .catch(err => console.error(err));
+        .catch(err => this.errorMessage(err));
       },
       loadList(fileName, isParent) {
         console.log("Hola: " + process.env.GRPC_HOST);
@@ -154,6 +160,19 @@
             });
           }
         }
+        if(this.tableData.length == 0) {
+          this.tableData.push({
+            filename: 'None',
+            basename: 'None',
+            lastmod: 'None',
+            size: 'None',
+            type: '--',
+            mime: 'None',
+            title: 'None',
+            description: 'None',
+            keywords: 'None'
+          });
+        }
       },
       isValidFile(fileName) {
         return fileName.includes(".flv")
@@ -168,6 +187,32 @@
         console.log("Index: " + index);
         this.currentIndex = index;
         this.dialogFormVisible = true;
+      },
+      sucessMessage(resultMessage) {
+        this.$notify({
+          title: 'Upload Success',
+          message: resultMessage,
+          type: 'success'
+        });
+      },
+      warningMessage(resultMessage) {
+        this.$notify({
+          title: 'Warning',
+          type: 'warning',
+          message: resultMessage
+        });
+      },
+      infoMessage(resultMessage) {
+        this.$notify.info({
+          title: 'Info',
+          message: resultMessage
+        });
+      },
+      errorMessage(resultMessage) {
+        this.$notify.error({
+          title: 'Error',
+          message: resultMessage
+        });
       }
     },
     created() {
@@ -178,6 +223,7 @@
         this.tableData[mediaAttribute.index].title = mediaAttribute.title;
         this.tableData[mediaAttribute.index].description = mediaAttribute.description;
         this.tableData[mediaAttribute.index].keywords = mediaAttribute.keywords;
+        console.log("To Publish: " + this.tableData[mediaAttribute.index].keywords);
         this.handlePublish(mediaAttribute.index, this.tableData[mediaAttribute.index]);
       });
       eventBus.$on('media-to-cancel', ()=> {
