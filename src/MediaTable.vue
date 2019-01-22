@@ -20,8 +20,10 @@
         prop="lastmod">
       </el-table-column>
       <el-table-column
-        label="Size"
-        prop="size">
+        label="Progress">
+          <template slot-scope="scope">
+            <el-progress :text-inside="true" :stroke-width="18" :percentage="scope.row.percentage"></el-progress>
+          </template>
       </el-table-column>
       <el-table-column
         align="right">
@@ -68,7 +70,8 @@
 <script>
   import { eventBus } from './main.js'
   import MediaAttributes from "./MediaAttributes.vue";
-  var GRPC_HOST = 'http://0.0.0.0:8989';
+  var GRPC_HOST = 'http://Impala:55989';
+  //var GRPC_HOST = 'http://0.0.0.0:8989';
   export default {
     props: ['tableData'],
     components: {
@@ -78,7 +81,8 @@
       return {
         search: '',
         currentIndex: 0,
-        dialogFormVisible: false
+        dialogFormVisible: false,
+        percentage: 0
       }
     },
     methods: {
@@ -101,17 +105,26 @@
         fileData.setKeywords(row.keywords);
         //
         this.infoMessage("Uploading File: " + fileData.getBasename());
+        this.setPercentage(index, 40);
         var callList = requestService.requestUpload(fileData)
           .then(res => {
-          console.log('Request response = ', res.getMessage());
-          if(res.getMessage()) {
-            this.errorMessage(res.getMessage());
-          } else {
-            this.sucessMessage();
-          }
-          //
+            this.setPercentage(index, 80);
+            console.log('Request response = ', res.getMessage());
+            if(res.getMessage()) {
+              this.setPercentage(index, 0);
+              this.errorMessage(res.getMessage());
+              console.log('Request response = ', res.getMessage());
+            } else {
+              this.setPercentage(index, 100);
+              this.sucessMessage();
+              console.log('Request response = ', res.getMessage());
+            }
         })
-        .catch(err => this.errorMessage(err));
+        .catch(err => {
+          this.setPercentage(index, 0);
+          this.errorMessage(err);
+          console.log('Request response = ', res.getMessage());
+        });
       },
       loadList(fileName, isParent) {
         console.log("Hola: " + process.env.GRPC_HOST);
@@ -173,6 +186,9 @@
             keywords: 'None'
           });
         }
+      },
+      setPercentage(index, value) {
+        this.tableData[index].percentage = value;
       },
       isValidFile(fileName) {
         return fileName.includes(".flv")
