@@ -68,10 +68,9 @@
 </template>
 
 <script>
-  import { eventBus } from './main.js'
-  import MediaAttributes from "./MediaAttributes.vue";
-  var GRPC_HOST = 'http://Impala:55989';
-  //var GRPC_HOST = 'http://0.0.0.0:8989';
+  import { eventBus } from '@/main.js'
+  import MediaAttributes from '@/MediaAttributes.vue'
+
   export default {
     props: ['tableData'],
     components: {
@@ -89,24 +88,19 @@
       handlePublish(index, row) {
         console.log(index, row);
         const grpc_promise = require('grpc-promise');
-        const {UploadFileData, UploadReply} = require('./grpc/protos/youtube-uploader_pb.js');
-        const {YouTubeFileUploaderClient, YouTubeFileUploaderPromiseClient} = require('./grpc/protos/youtube-uploader_grpc_web_pb.js');
-        var requestService = new YouTubeFileUploaderPromiseClient(GRPC_HOST);
-        grpc_promise.promisifyAll(requestService);
-        var fileData = new UploadFileData();
-        fileData.setFilename(row.filename);
-        fileData.setBasename(row.basename);
-        fileData.setLastmod(row.lastmod);
-        fileData.setSize(row.size);
-        fileData.setType(row.type);
-        fileData.setMime(row.mime);
-        fileData.setTitle(row.title);
-        fileData.setDescription(row.description);
-        fileData.setKeywords(row.keywords);
-        //
-        this.infoMessage("Uploading File: " + fileData.getBasename());
+        grpc_promise.promisifyAll(this.$RequestService)
+        this.$fileData.setFilename(row.filename);
+        this.$fileData.setBasename(row.basename);
+        this.$fileData.setLastmod(row.lastmod);
+        this.$fileData.setSize(row.size);
+        this.$fileData.setType(row.type);
+        this.$fileData.setMime(row.mime);
+        this.$fileData.setTitle(row.title);
+        this.$fileData.setDescription(row.description);
+        this.$fileData.setKeywords(row.keywords);
+        this.infoMessage("Uploading File: " + this.$fileData.getBasename());
         this.setPercentage(index, 40);
-        var callList = requestService.requestUpload(fileData)
+        var callList = this.$RequestService.requestUpload(this.$fileData)
           .then(res => {
             this.setPercentage(index, 80);
             console.log('Request response = ', res.getMessage());
@@ -138,15 +132,12 @@
           }
         }
         const grpc_promise = require('grpc-promise');
-        const {ClientRequest, FileList} = require('./grpc/protos/youtube-uploader_pb.js');
-        const {YouTubeFileUploaderClient, YouTubeFileUploaderPromiseClient} = require('./grpc/protos/youtube-uploader_grpc_web_pb.js');
-        var requestService = new YouTubeFileUploaderPromiseClient(GRPC_HOST);
-        grpc_promise.promisifyAll(requestService);
-        var request = new ClientRequest();
-        request.setClientname("Web App");
-        request.setFilename(fileName);
+        grpc_promise.promisifyAll(this.$RequestService);
+        var this.$request = new ClientRequest();
+        this.$request.setClientname("Web App");
+        this.$request.setFilename(fileName);
         //
-        var callList = requestService.requestFileList(request)
+        var callList = this.$RequestService.requestFileList(this.$request)
           .then(res => {
           console.log('Client: Simple Message Received = ', res);
           this.setRowValues(res);

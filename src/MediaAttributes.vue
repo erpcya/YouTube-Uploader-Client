@@ -15,10 +15,14 @@
     </el-form-item>
   </el-form>
 </template>
+
 <script>
-  import { eventBus } from './main.js'
+  import { eventBus } from '@/main.js'
   export default {
-    props: ['filenameValue', 'indexValue', 'titleValue', 'descriptionValue', 'keywordsValue'],
+    name: 'MediaAttributes',
+    props: [
+      'filenameValue', 'indexValue', 'titleValue', 'descriptionValue', 'keywordsValue'
+    ],
     data() {
       return {
         index: 0,
