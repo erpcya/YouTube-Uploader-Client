@@ -5,15 +5,39 @@ This is a little project for upload video from a [Nextcloud](https://nextcloud.c
 
 ## Build Setup
 
+### Installing dependencies
 ``` bash
-# install dependencies
+# install via NPM
 npm install
+```
+Or
+``` bash
+# install via Yarn
+yarn install
+```
 
-# serve with hot reload at localhost:8080
-npm run dev
+### Executing server.
+Serve with hot reload at localhost:8080
+``` bash
+# with NPM
+npm start
+```
+Or
+``` bash
+# with Yarn
+yarn start
+```
 
-# build for production with minification
+### Building
+Build for production with minification
+``` bash
+# with NPM
 npm run build
+```
+Or
+``` bash
+# with Yarn
+yarn run build
 ```
 
 For detailed explanation on how things work, consult the [docs for vue-loader](http://vuejs.github.io/vue-loader).
